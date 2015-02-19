@@ -174,8 +174,9 @@ r.table('foo').map{|row| row['val'] > 23}
 - We want to take maximum advantage of Node's event-driven architecture.<!-- .element: class="fragment" -->
 - Node.js webserver talking to a client over websockets:<!-- .element: class="fragment" -->
 
-![websocket_image]() <!-- .element: class="fragment" -->
+![websocket_setup]() <!-- .element: class="fragment" -->
 
+<!-- <video width="800" height="600" src="movies/websocket_image.mov" controls type="video/mp4"></video> -->
 
 ## This is great
 
@@ -264,9 +265,10 @@ Yes. Yes it can. <!-- .element: class="fragment" -->
 ![database_changefeed_image]() <!-- .element: class="fragment" -->
 
 
+
 ## Why is the database the best place?
 
-You already wrote those queries telling it what was relevant:
+You already wrote those queries describing what was relevant:
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
 ```js
@@ -289,6 +291,74 @@ Now whenever the results of this query change, they'll be pushed to us in realti
 
 ## Changefeeds in RethinkDB
 
+You can watch changes on a table, or an individual document:
+<!-- .element: class="fragment" data-fragment-index="1"-->
+
+```js
+r.table('foo').changes()
+r.table('foo').get(documentId).changes()
+```
+<!-- .element: class="fragment" data-fragment-index="1"-->
+
+You can watch for changes on transformations of documents
+<!-- .element: class="fragment" data-fragment-index="2"-->
+
+```js
+r.table('foo').map(function(x){return x + 1}).changes()
+```
+<!-- .element: class="fragment" data-fragment-index="2"-->
+
+You can watch for changes on filtered selections of documents
+<!-- .element: class="fragment" data-fragment-index="3"-->
+
+```js
+r.table('foo').filter(r.row('name').contains('bob')).changes()
+```
+<!-- .element: class="fragment" data-fragment-index="3"-->
+
+You can watch for changes on queries that are ordered and limited
+<!-- .element: class="fragment" data-fragment-index="4"-->
+
+```js
+r.table('foo').orderBy({index: 'score'}).limit(10)
+```
+<!-- .element: class="fragment" data-fragment-index="4"-->
 
 
-## Changefeeds in RethinkDB
+
+## Aren't DB connections expensive?
+
+Normally, they are. <!-- .element: class="fragment" -->
+
+Most databases use a process or a thread per connection. <!-- .element: class="fragment" -->
+
+But RethinkDB uses coroutines for everything, so connections are cheap. <!-- .element: class="fragment" -->
+
+
+
+## Database coroutines
+
+Often aren't worth the trouble. <!-- .element: class="fragment" -->
+
+Queries are commonly CPU bound, which is where cooperative multitasking isn't much benefit. <!-- .element: class="fragment" -->
+
+But it is very useful in the case where we have many "mostly idle" connections listening for changes. <!-- .element: class="fragment" -->
+
+
+
+## The event-driven stack
+
+Changefeeds enable an front-to-back push architecture.  <!-- .element: class="fragment" -->
+
+Write your queries once, get the snapshot of the data you want, and then get updates as they happen in real time.  <!-- .element: class="fragment" -->
+
+
+
+## The future
+
+- Right now, changefeeds don't work on queries requiring a "reduce" step
+- Our goal is to make all queries changefeedable
+
+
+
+# Questions?
