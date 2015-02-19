@@ -9,14 +9,19 @@
  * GLOBAL STYLES
  *********************************************/
 body {
-  background: #111;
-  background-color: #111; }
+  background: #000;
+  background-color: #000; }
 
 .reveal {
   font-family: 'Open Sans', sans-serif;
   font-size: 30px;
   font-weight: normal;
   color: #eee; }
+
+.reveal video, .reveal img.movie_img {
+    height: 400px;
+    border: 0px;
+}
 
 ::selection {
   color: #fff;

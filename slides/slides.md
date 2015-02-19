@@ -35,9 +35,10 @@
 - Built-in web admin interface <!-- .element: class="fragment" -->
 
 
+
 ## Easy sharding and replication
 
-![shard and replicate](images/1.16-reconfigure.gif)
+<video data-autoplay src="movies/reconfigure.webm"></video>
 
 
 
@@ -171,44 +172,60 @@ r.table('foo').map{|row| row['val'] > 23}
 
 ## Let's build an event-driven app
 
-- We want to take maximum advantage of Node's event-driven architecture.<!-- .element: class="fragment" -->
-- Node.js webserver talking to a client over websockets:<!-- .element: class="fragment" -->
+We want to take maximum advantage of Node's event-driven architecture.<!-- .element: class="fragment" data-fragment-index="1" -->
 
-![websocket_setup]() <!-- .element: class="fragment" -->
+The natural choice is to talk to the browser over websockets <!-- .element: class="fragment" data-fragment-index="2" -->
 
-<!-- <video width="800" height="600" src="movies/websocket_image.mov" controls type="video/mp4"></video> -->
+<img class="fragment movie_img" data-fragment-index="2" src="movies/01_last_frame.png">
+<!-- <video data-autoplay class="fragment" src="movies/01_websocket.webm"></video> -->
+
+
+<!-- .slide: data-transition="fade" -->
 
 ## This is great
 
-- As Node becomes aware of relevant events, it pushes them to the clients that need them <!-- .element: class="fragment" -->
-- Without threads, we can have thousands of connections simultaneously <!-- .element: class="fragment" -->
-- Since everything is push, no unnecessary work is going on <!-- .element: class="fragment" -->
+As Node becomes aware of relevant events, it pushes them to the clients that need them <!-- .element: class="fragment" -->
 
+Without threads, we can have thousands of connections simultaneously <!-- .element: class="fragment" -->
+
+Since everything is push, no unnecessary work is going on <!-- .element: class="fragment" -->
+
+<img class="movie_img" src="movies/01_last_frame.png">
+
+
+<!-- .slide: data-transition="fade" -->
 
 ## Well, that's not entirely true
 
-- How does Node find out about relevant events? <!-- .element: class="fragment" data-fragment-index="1" -->
-- It polls the database of course! <!-- .element: class="fragment" data-fragment-index="2" -->
+How does Node find out about relevant events?
 
-![database_polling_image]() <!-- .element: class="fragment" data-fragment-index="2" -->
-
-
-## Ha. No really, nobody does that
-
-Of course not. <!-- .element: class="fragment" data-fragment-index="1" -->
-
-We don't want Node up doing a bunch of busywork. <!-- .element: class="fragment" data-fragment-index="2" -->
-
-Busywork means less requests handled. <!-- .element: class="fragment" data-fragment-index="2" -->
+<video data-autoplay src="movies/02_what_pushes.webm"></video>
 
 
-## What we need is a message queue!
+<!-- .slide: data-transition="fade" -->
 
-A push solution like a message queue will wake Node up only when
-there's an event to be processed: <!-- .element: class="fragment" data-fragment-index="3" -->
+## Polling the database is bad
 
-![message_queue_image]() <!-- .element: class="fragment" data-fragment-index="3"-->
+That's much too slow. <!-- .element: class="fragment" data-fragment-index="1" -->
 
+We don't want the webserver doing a bunch of busywork <!-- .element: class="fragment" data-fragment-index="2" -->
+
+Busywork means we can handle less requests <!-- .element: class="fragment" data-fragment-index="3" -->
+
+<img class="movie_img" src="movies/02_last_frame.png">
+
+
+<!-- .slide: data-transition="fade" -->
+
+## We need a message queue!
+
+A message queue will wake Node up only when there's an event to be
+processed
+
+<video data-autoplay src="movies/03_mq.webm"></video>
+
+
+<!-- .slide: data-transition="fade" -->
 
 ## How do we know what to send to Node?
 
@@ -216,18 +233,31 @@ Simple: just send everything.
 
 Let the application sort out what's relevant. <!-- .element: class="fragment" -->
 
-I call this the firehose strategy: <!-- .element: class="fragment" -->
+This is the "firehose strategy" <!-- .element: class="fragment" -->
 
-![node_firehose_image]() <!-- .element: class="fragment" -->
+<video data-autoplay src="movies/04_firehose.webm"></video>
 
+
+<!-- .slide: data-transition="fade" -->
+
+## And when we scale out?
+
+Just send all events to all of your webservers
+
+<video data-autoplay src="movies/05_scaled_firehose.webm"></video>
+
+
+<!-- .slide: data-transition="fade" -->
 
 ## This is almost as bad as polling
 
 Instead of asking for events when nothing is happening, we're
 processing tons of events that aren't relevant.
 
-![node_sad_face]() <!-- .element: class="fragment" -->
+<img class="movie_img" src="movies/05_last_frame.png">
 
+
+<!-- .slide: data-transition="fade" -->
 
 ## Time to get smart
 
@@ -235,24 +265,43 @@ processing tons of events that aren't relevant.
 - We can subscribe to topics... <!-- .element: class="fragment" -->
 - We can divide all our queries up into categories... <!-- .element: class="fragment" -->
 
-![MQ_complicated_image]() <!-- .element: class="fragment" -->
+<video data-autoplay src="movies/06_smart_mq.webm"></video>
 
 
-## Before we do that, let's zoom out a bit more
+<!-- .slide: data-transition="fade" -->
 
-Who's the source of all these events, and what are they doing?
+## But before we do all that
 
-![change_source]()
+Let's zoom out a bit more.
+
+Who's the source of all these events, and what are they doing? <!-- .element: class="fragment" -->
+
+<video data-autoplay src="movies/07_change_sources.webm"></video>
 
 
-## The sources of the changes could be anything
+<!-- .slide: data-transition="fade" -->
+
+## Sources of change can be anything
 
 - Could be Node itself, getting events from other users <!-- .element: class="fragment" -->
 - Could be webhooks from external APIs <!-- .element: class="fragment" -->
 - Could be the collar on a shark somewhere in the Pacific... <!-- .element: class="fragment" -->
 
-The point being, we can't pass the buck any more: there's no-one more qualified to decide what events are relevant than the application <!-- .element: class="fragment" -->
+<img class="movie_img" src="movies/07_last_frame.png">
 
+
+<!-- .slide: data-transition="fade" -->
+
+## Should we make the change emitters smarter?
+
+No, we can't pass the buck any more.
+
+There's no piece of the stack more qualified to decide what events are relevant than the web server<!-- .element: class="fragment" -->
+
+<img class="movie_img" src="movies/07_last_frame.png">
+
+
+<!-- .slide: data-transition="fade" -->
 
 ## Well, almost...
 
@@ -260,29 +309,32 @@ Aren't we sending all these events to the database anyway? <!-- .element: class=
 
 Can the database just tell us when something happens that we care about? <!-- .element: class="fragment" -->
 
-Yes. Yes it can. <!-- .element: class="fragment" -->
-
-![database_changefeed_image]() <!-- .element: class="fragment" -->
+<img class="movie_img" src="movies/07_last_frame.png">
 
 
+<!-- .slide: data-transition="fade" -->
 
-## Why is the database the best place?
+## Yes. Yes it can.
+
+<video data-autoplay src="movies/08_changefeeds.webm"></video>
+
+
+
+## Why is the database the best place to handle this?
 
 You already wrote those queries describing what was relevant:
 <!-- .element: class="fragment" data-fragment-index="1" -->
 
-```js
+<pre data-fragment-index="1" class="highlight js fragment">
 r.table('players').orderBy({index: 'score_desc'}).limit(5)
-```
-<!-- .element: class="fragment" data-fragment-index="1" -->
+</pre>
 
-Just tack ".changes()" to the end:
+Just tack ".changes()" on the end:
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
-```js
-r.table('players').orderBy({index: 'score_desc'}).limit(5).changes()
-```
-<!-- .element: class="fragment" data-fragment-index="2" -->
+<pre data-fragment-index="2" class="highlight js fragment">
+r.table('players').orderBy({index: 'score_desc'}).limit(5)<span data-fragment-index="2" class="fragment highlight-current-green">.changes()</span>
+</pre>
 
 Now whenever the results of this query change, they'll be pushed to us in realtime
 <!-- .element: class="fragment" data-fragment-index="3"-->
@@ -348,7 +400,7 @@ But it is very useful in the case where we have many "mostly idle" connections l
 
 ## The event-driven stack
 
-Changefeeds enable an front-to-back push architecture.  <!-- .element: class="fragment" -->
+Changefeeds enable a front-to-back push architecture.  <!-- .element: class="fragment" -->
 
 Write your queries once, get the snapshot of the data you want, and then get updates as they happen in real time.  <!-- .element: class="fragment" -->
 
