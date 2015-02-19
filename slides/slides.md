@@ -3,34 +3,49 @@
 
 
 
-## Node.js has shown that
-
-### event driven = scalable
+### RethinkDB is the first open-source scalable database for the realtime web
 
 
 
-## RethinkDB:
-### a database that has taken Node's lessons to heart
+## What is the realtime web?
+
+As an example: <!-- .element: class="fragment" -->
+
+- A user changes the position of a button in a collaborative design
+app <!-- .element: class="fragment" -->
+- The server has to notify other users that are simultaneously working on the same project.  <!-- .element: class="fragment" -->
 
 
+## Web browsers have it solved
 
-## What do I mean by that?
+Web browsers support these use cases via WebSockets and long-lived
+HTTP connections. <!-- .element: class="fragment" -->
 
-### &#x2713; We have v8 as a dependency. <!-- .element: class="fragment" -->
-
-
-
-### OK, that's not actually what I was talking about
-
+But adapting database systems to realtime needs still presents a huge
+engineering challenge. <!-- .element: class="fragment" -->
 
 
-## About RethinkDB:
+## Where do we need the realtime web?
+
+- modern marketplaces  <!-- .element: class="fragment" -->
+- streaming analytics apps  <!-- .element: class="fragment" -->
+- multiplayer games  <!-- .element: class="fragment" -->
+- collaborative web and mobile apps.  <!-- .element: class="fragment" -->
+
+All of these applications require sending data directly to the client in realtime. <!-- .element: class="fragment" -->
+
+
+## RethinkDB
+
+RethinkDB is the first database designed from the ground up for the realtime web.
+
+We make building these apps dramatically easier.  <!-- .element: class="fragment" -->
 
 
 
 ## JSON Document database
 - Lock-free MVCC <!-- .element: class="fragment" -->
-- Joins <!-- .element: class="fragment" -->
+- Distributed joins <!-- .element: class="fragment" -->
 - Queries automatically distributed across cluster <!-- .element: class="fragment" -->
 - Built-in web admin interface <!-- .element: class="fragment" -->
 
@@ -167,6 +182,22 @@ r.table('foo').map{|row| row['val'] > 23}
 .
 .
 ```
+
+
+
+## Node.js has shown that
+
+### event driven = scalable
+
+
+
+## How has RethinkDB taken Node's lessons to heart?
+
+### &#x2713; We have v8 as a dependency. <!-- .element: class="fragment" -->
+
+
+
+### OK, that's not actually what I was talking about
 
 
 
@@ -333,7 +364,7 @@ Just tack ".changes()" on the end:
 <!-- .element: class="fragment" data-fragment-index="2" -->
 
 <pre data-fragment-index="2" class="highlight js fragment">
-r.table('players').orderBy({index: 'score_desc'}).limit(5)<span data-fragment-index="2" class="fragment highlight-current-green">.changes()</span>
+r.table('players').orderBy({index: 'score_desc'}).limit(5)<span data-fragment-index="2" class="fragment highlight-green">.changes()</span>
 </pre>
 
 Now whenever the results of this query change, they'll be pushed to us in realtime
@@ -410,6 +441,23 @@ Write your queries once, get the snapshot of the data you want, and then get upd
 
 - Right now, changefeeds don't work on queries requiring a "reduce" step
 - Our goal is to make all queries changefeedable
+
+
+
+### RethinkDB is the first open-source scalable database for the realtime web
+
+### It makes building realtime app dramatically easier <!-- .element: class="fragment" -->
+
+
+
+## Learn more
+- Check out [rethinkdb.com](http://rethinkdb.com)
+- Download the product and try it out.
+  - It's available on most platforms
+  - very easy to get started
+- Ask us questions and give us feedback [@rethinkdb](http://twitter.com/rethinkdb) on twitter
+
+### We're shipping 2.0 in a few weeks! Now is a great time to get started. <!-- .element: class="fragment" -->
 
 
 
