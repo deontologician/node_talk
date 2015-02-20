@@ -6,14 +6,32 @@
 ### RethinkDB is the first open-source scalable database for the realtime web
 
 
+## We're open source
 
-## What is the realtime web?
+- Open sourced AGPL 2 years ago
+- Over 100 contributors to the project
+- Small team of core developers in Mountain View
 
-As an example: <!-- .element: class="fragment" -->
 
-- A user changes the position of a button in a collaborative design
-app <!-- .element: class="fragment" -->
-- The server has to notify other users that are simultaneously working on the same project.  <!-- .element: class="fragment" -->
+
+## We're scalable
+
+- Sharding so you can scale queries to more machines <!-- .element: class="fragment" -->
+- Replication so your data is never lost <!-- .element: class="fragment" -->
+- Queries are automatically converted to map/reduce so no changes are needed when you scale up <!-- .element: class="fragment" -->
+
+
+
+## So, what is the realtime web?
+
+<video data-autoplay class="fragment" src="movies/rta.webm">
+
+
+
+## Slack
+
+<img class="fragment" src="images/slack_rta.png">
+
 
 
 ## Web browsers have it solved
@@ -43,7 +61,7 @@ We make building these apps dramatically easier.  <!-- .element: class="fragment
 
 
 
-## JSON Document database
+## JSON document database
 - Lock-free MVCC <!-- .element: class="fragment" -->
 - Distributed joins <!-- .element: class="fragment" -->
 - Queries automatically distributed across cluster <!-- .element: class="fragment" -->
@@ -183,11 +201,50 @@ r.table('foo').map{|row| row['val'] > 23}
 .
 ```
 
+## About Node.js
+
+- Node is event driven
+
+- Uses coroutines vs. threads or processes
+
+- Designed to solve "C10K" problem
+
+
+## Event driven
+
+Node.js was originally created with push capabilities in mind  <!-- .element: class="fragment" -->
+
+When an event occurs, callbacks are run in response.  <!-- .element: class="fragment" -->
+
+But if nothing is happening, Node is content to sit quietly and wait.  <!-- .element: class="fragment" -->
+
+
+## Node uses coroutines
+
+Coroutines are "cooperative multitasking". <!-- .element: class="fragment" -->
+
+Unlike threads, coroutines don't need locks or mutexes to protect memory <!-- .element: class="fragment" -->
+
+Unlike threads, you don't pay the cost of context switching back to the operating system between tasks. <!-- .element: class="fragment" -->
+
+But coroutines don't take advantage of more cores by default.  <!-- .element: class="fragment" -->
+
+
+## Node is designed for C10K
+
+How do you have 10,000 connections to your web server open at once?
+
+You can't use threads, it takes up too much memory! <!-- .element: class="fragment" -->
+
+The co-routines that run your callbacks solve this. <!-- .element: class="fragment" -->
+
+Web servers do a ton of I/O, so they're a perfect match.. <!-- .element: class="fragment" -->
+
 
 
 ## Node.js has shown that
 
-### event driven = scalable
+### event driven == scalable
 
 
 
@@ -201,14 +258,13 @@ r.table('foo').map{|row| row['val'] > 23}
 
 
 
-## Let's build an event-driven app
+## To answer that question, let's build a realtime app
 
 We want to take maximum advantage of Node's event-driven architecture.<!-- .element: class="fragment" data-fragment-index="1" -->
 
-The natural choice is to talk to the browser over websockets <!-- .element: class="fragment" data-fragment-index="2" -->
+The natural choice is to talk to the browser over Websockets <!-- .element: class="fragment" data-fragment-index="2" -->
 
 <img class="fragment movie_img" data-fragment-index="2" src="movies/01_last_frame.png">
-<!-- <video data-autoplay class="fragment" src="movies/01_websocket.webm"></video> -->
 
 
 <!-- .slide: data-transition="fade" -->
@@ -260,7 +316,7 @@ processed
 
 ## How do we know what to send to Node?
 
-Simple: just send everything.
+We could try just sending everything.
 
 Let the application sort out what's relevant. <!-- .element: class="fragment" -->
 
@@ -273,7 +329,7 @@ This is the "firehose strategy" <!-- .element: class="fragment" -->
 
 ## And when we scale out?
 
-Just send all events to all of your webservers
+Well, we have to send all events to all webservers
 
 <video data-autoplay src="movies/05_scaled_firehose.webm"></video>
 
@@ -299,6 +355,15 @@ processing tons of events that aren't relevant.
 <video data-autoplay src="movies/06_smart_mq.webm"></video>
 
 
+## This is complicated
+
+You can get this to work efficiently, but it's tough work
+
+The solution will be different for every app <!-- .element: class="fragment" -->
+
+As your app evolves, you'll need to add new queues to keep up <!-- .element: class="fragment" -->
+
+
 <!-- .slide: data-transition="fade" -->
 
 ## But before we do all that
@@ -312,9 +377,9 @@ Who's the source of all these events, and what are they doing? <!-- .element: cl
 
 <!-- .slide: data-transition="fade" -->
 
-## Sources of change can be anything
+## Sources of events can be anything
 
-- Could be Node itself, getting events from other users <!-- .element: class="fragment" -->
+- Could be the web app itself, getting input from users <!-- .element: class="fragment" -->
 - Could be webhooks from external APIs <!-- .element: class="fragment" -->
 - Could be the collar on a shark somewhere in the Pacific... <!-- .element: class="fragment" -->
 
@@ -323,11 +388,11 @@ Who's the source of all these events, and what are they doing? <!-- .element: cl
 
 <!-- .slide: data-transition="fade" -->
 
-## Should we make the change emitters smarter?
+## Can make the change sources smarter?
 
-No, we can't pass the buck any more.
+It's probably not a great idea. Your shark collar shouldn't need to know how your whole app works.
 
-There's no piece of the stack more qualified to decide what events are relevant than the web server<!-- .element: class="fragment" -->
+At this point, it seems like there's no piece of the stack more qualified to route events than your webserver<!-- .element: class="fragment" -->
 
 <img class="movie_img" src="movies/07_last_frame.png">
 
@@ -345,13 +410,23 @@ Can the database just tell us when something happens that we care about? <!-- .e
 
 <!-- .slide: data-transition="fade" -->
 
-## Yes. Yes it can.
+## Yes it can.
+
+We call them changefeeds.
 
 <video data-autoplay src="movies/08_changefeeds.webm"></video>
 
 
 
 ## Why is the database the best place to handle this?
+
+- The database knows how your queries work  <!-- .element: class="fragment" -->
+- It knows what parts of the query depend on what data  <!-- .element: class="fragment" -->
+- And it knows where that data is <!-- .element: class="fragment" -->
+
+
+
+## How you do it in RethinkDB
 
 You already wrote those queries describing what was relevant:
 <!-- .element: class="fragment" data-fragment-index="1" -->
@@ -372,7 +447,7 @@ Now whenever the results of this query change, they'll be pushed to us in realti
 
 
 
-## Changefeeds in RethinkDB
+## Using changefeeds
 
 You can watch changes on a table, or an individual document:
 <!-- .element: class="fragment" data-fragment-index="1"-->
@@ -419,7 +494,7 @@ But RethinkDB uses coroutines for everything, so connections are cheap. <!-- .el
 
 
 
-## Database coroutines
+## Coroutines in the database
 
 Often aren't worth the trouble. <!-- .element: class="fragment" -->
 
