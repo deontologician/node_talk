@@ -30,7 +30,7 @@
 
 ## Slack
 
-<img class="fragment" src="images/slack_rta.png">
+<img src="images/slack_rta.png">
 
 
 
@@ -201,6 +201,7 @@ r.table('foo').map{|row| row['val'] > 23}
 .
 ```
 
+
 ## About Node.js
 
 - Node is event driven
@@ -293,11 +294,11 @@ How does Node find out about relevant events?
 
 ## Polling the database is bad
 
-That's much too slow. <!-- .element: class="fragment" data-fragment-index="1" -->
+That's much too slow.
 
 We don't want the webserver doing a bunch of busywork <!-- .element: class="fragment" data-fragment-index="2" -->
 
-Busywork means we can handle less requests <!-- .element: class="fragment" data-fragment-index="3" -->
+Busywork means we can't handle as many request <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <img class="movie_img" src="movies/02_last_frame.png">
 
@@ -318,7 +319,7 @@ processed
 
 We could try just sending everything.
 
-Let the application sort out what's relevant. <!-- .element: class="fragment" -->
+The app can sort out what's relevant. <!-- .element: class="fragment" -->
 
 This is the "firehose strategy" <!-- .element: class="fragment" -->
 
@@ -355,6 +356,8 @@ processing tons of events that aren't relevant.
 <video data-autoplay src="movies/06_smart_mq.webm"></video>
 
 
+<!-- .slide: data-transition="fade" -->
+
 ## This is complicated
 
 You can get this to work efficiently, but it's tough work
@@ -362,6 +365,8 @@ You can get this to work efficiently, but it's tough work
 The solution will be different for every app <!-- .element: class="fragment" -->
 
 As your app evolves, you'll need to add new queues to keep up <!-- .element: class="fragment" -->
+
+<img class="movie_img" src="movies/06_last_frame.png">
 
 
 <!-- .slide: data-transition="fade" -->
@@ -388,7 +393,7 @@ Who's the source of all these events, and what are they doing? <!-- .element: cl
 
 <!-- .slide: data-transition="fade" -->
 
-## Can make the change sources smarter?
+## Can we make the change sources smarter?
 
 It's probably not a great idea. Your shark collar shouldn't need to know how your whole app works.
 
