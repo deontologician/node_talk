@@ -84,7 +84,7 @@ We make building these kinds of apps dramatically easier.  <!-- .element: class=
 
 ## Easy sharding and replication
 
-<video data-autoplay src="movies/reconfigure.webm"></video>
+### Demo
 
 ----
 
@@ -223,7 +223,7 @@ It's slow, and it puts a massive load on the database and the web server as more
 
 We don't want the webserver doing a bunch of busywork <!-- .element: class="fragment" data-fragment-index="2" -->
 
-Busywork means we can't handle as many request <!-- .element: class="fragment" data-fragment-index="3" -->
+Busywork means we can't handle as many requests <!-- .element: class="fragment" data-fragment-index="3" -->
 
 <img class="movie_img" src="movies/02_last_frame.png">
 
@@ -293,7 +293,7 @@ processing tons of events that aren't relevant.
 
 ## This is complicated
 
-You can get this to be efficiently, but it's a lot of work
+You can get this to be efficient, but it's a lot of work
 
 The solution will be different for every app <!-- .element: class="fragment" -->
 
@@ -309,7 +309,9 @@ As your app evolves, you'll need to add new queues to keep up <!-- .element: cla
 
 Let's zoom out a bit more.
 
-Who's the source of all these events, and what are they doing? <!-- .element: class="fragment" -->
+Are we stuck sending our updates to two places? <!-- .element: class="fragment" -->
+
+Once to the database as the source of truth, and once to our push notification architecture? <!-- .element: class="fragment" -->
 
 <video data-autoplay src="movies/07_change_sources.webm"></video>
 
@@ -317,51 +319,21 @@ Who's the source of all these events, and what are they doing? <!-- .element: cl
 
 <!-- .slide: data-transition="fade" -->
 
-## Sources of events can be anything
+## Can the database just do it?
 
-- Could be the web app itself, getting input from users <!-- .element: class="fragment" -->
-- Could be webhooks from external APIs <!-- .element: class="fragment" -->
-- Could be the collar on a shark somewhere in the Pacific... <!-- .element: class="fragment" -->
+Let's just have the database tell us when something happens.
 
-<img class="movie_img" src="movies/07_last_frame.png">
-
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## Can we make the change sources smarter?
-
-It's probably not a great idea.  <!-- .element: class="fragment" -->
-
-Your shark collar shouldn't need to know how your entire app works.  <!-- .element: class="fragment" -->
-
-<img class="movie_img" src="movies/07_last_frame.png">
-
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## Can the database do it?
-
-Aren't we sending all these events to the database anyway? <!-- .element: class="fragment" -->
-
-Can the database just tell us when something happens that we care about? <!-- .element: class="fragment" -->
-
-<img class="movie_img" src="movies/07_last_frame.png">
-
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## Yes it can.
-
-We call them changefeeds.
+That's what changefeeds are <!-- .element: class="fragment" -->
 
 <video data-autoplay src="movies/08_changefeeds.webm"></video>
 
 ----
 
-## Why is the database the best place to handle this?
+## Using changefeeds demo
+
+----
+
+## Why the database is best positioned to handle this
 
 - The database knows how your queries work  <!-- .element: class="fragment" -->
 - It knows what parts of the query depend on what data  <!-- .element: class="fragment" -->
@@ -370,28 +342,7 @@ We call them changefeeds.
 
 ----
 
-## How you do it in RethinkDB
-
-We already wrote a query describing what was relevant:
-<!-- .element: class="fragment" data-fragment-index="1" -->
-
-<pre data-fragment-index="1" class="highlight js fragment">
-r.table('players').orderBy({index: r.desc('score')}).limit(5)
-</pre>
-
-Just tack ".changes()" on the end:
-<!-- .element: class="fragment" data-fragment-index="2" -->
-
-<pre data-fragment-index="2" class="highlight js fragment">
-r.table('players').orderBy({index: r.desc('score')}).limit(5)<span data-fragment-index="2" class="fragment highlight-green">.changes()</span>
-</pre>
-
-Now whenever the results of this query change, they'll be pushed to us in realtime
-<!-- .element: class="fragment" data-fragment-index="3"-->
-
-----
-
-## Using changefeeds demo
+## The tech behind changefeeds
 
 ----
 
@@ -442,8 +393,8 @@ Write your queries once, get the snapshot of the data you want, and then get upd
   - It's available on most platforms
   - very easy to get started
 - Ask us questions and give us feedback [@rethinkdb](http://twitter.com/rethinkdb) on twitter
-
-### We're shipping 2.0 in a few weeks! Now is a great time to get started. <!-- .element: class="fragment" -->
+### The 2.0 RC just dropped, now is an exciting time to get involved.
+- We have a [meetup on March 30th](http://www.meetup.com/RethinkDB-SF-Meetup-Group/events/220927293/) for the 2.0 release.
 
 ----
 
