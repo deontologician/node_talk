@@ -1,368 +1,252 @@
-# RethinkDB:
-### Bringing the lessons of Node to the database
+# RethinkDB
+### polling: there is a cure
 
 ----
 
 ### RethinkDB is the first open-source scalable database for the realtime web
 
-----
-
-## We're open source
-
-- Open sourced AGPL 2 years ago
-- Over 100 contributors to the project
-- Small team of core developers in Mountain View
+- JSON document store <!-- .element: class="fragment" -->
+- Queries in your language, not in string literals/json <!-- .element: class="fragment" -->
+- AGPLv3: not going anywhere! <!-- .element: class="fragment" -->
 
 ----
 
-## We're scalable
+## Scalability built in
 
 - Sharding so you can scale queries to more machines <!-- .element: class="fragment" -->
 - Replication so your data is never lost <!-- .element: class="fragment" -->
-- Queries are automatically converted to map/reduce so no changes are needed when you scale up <!-- .element: class="fragment" -->
+- Queries are automatically converted to map/reduce so you can effortlessly scale <!-- .element: class="fragment" -->
 
 ----
 
-## So, what is the realtime web?
+## The realtime web
 
-<video data-autoplay class="fragment" src="movies/rta.webm">
+You've seen first hand how the realtime web works
 
-----
-
-## Slack
-
-<img src="images/slack_rta.png">
-
-----
-
-## Where do we need the realtime web?
-
-- modern marketplaces  <!-- .element: class="fragment" -->
-- streaming analytics apps  <!-- .element: class="fragment" -->
-- multiplayer games  <!-- .element: class="fragment" -->
-- collaborative web and mobile apps.  <!-- .element: class="fragment" -->
-
-All of these applications require sending data directly to the client in realtime. <!-- .element: class="fragment" -->
+"Push, don't Poll"
 
 ----
 
 ## Web browsers have it solved
 
-- Long-polling
-- WebSockets <!-- .element: class="fragment" -->
+- Server Sent Events (SSE)
+- WebSockets
 
 ----
 
 ## Web application servers have it solved
 
-- Node.js was designed with realtime in mind
-- Other languages have have bolted these features on, but they work  <!-- .element: class="fragment" -->
+- Node.js and Go were designed with realtime in mind
+- Tornado and Twisted in Python  <!-- .element: class="fragment" -->
+- EventMachine in Ruby  <!-- .element: class="fragment" -->
+- Pretty much every language now has a push web framework <!-- .element: class="fragment" -->
 
 ----
 
-## What about the database?
+## The database is the final piece
 
-Adapting databases to the realtime web still presents a huge challenge.
-
-RethinkDB is the first database designed from the ground up for the realtime web.  <!-- .element: class="fragment" -->
-
-We make building these kinds of apps dramatically easier.  <!-- .element: class="fragment" -->
+Can we end polling in our lifetimes? <!-- .element: class="fragment" -->
 
 ----
 
-## A bit about RethinkDB
+## Adapting databases to the realtime web presents a huge challenge.
+
+Ever tried creating 1000 persistent connections to your DB? <!-- .element: class="fragment" -->
 
 ----
 
-## JSON document database
-- Lock-free MVCC <!-- .element: class="fragment" -->
-- Distributed joins <!-- .element: class="fragment" -->
-- Queries automatically distributed across cluster <!-- .element: class="fragment" -->
-- Built-in web admin interface <!-- .element: class="fragment" -->
+## RethinkDB is the first database designed from the ground up for the realtime web.
 
 ----
 
-## Easy sharding and replication
-
-### Demo
+## Because of this we make building realtime apps dramatically easier.
 
 ----
 
-## Intuitive query language
-
-- Official drivers for Node, Ruby & Python <!-- .element: class="fragment" data-fragment-index="1" -->
-- Excellent community drivers for Go, PHP, Clojure and more <!-- .element: class="fragment" data-fragment-index="2"-->
-- Integrated directly into the host language <!-- .element: class="fragment" data-fragment-index="3" -->
-
-### Node.js:
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-```js
-r.table('foo').filter(function(row){ return row('val').gt(23) })
-```
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-### Python:
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-```py
-r.table('foo').filter(lambda row: row['val'] > 23)
-```
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-### Ruby:
-<!-- .element: class="fragment" data-fragment-index="4" -->
-
-```rb
-r.table('foo').map{|row| row['val'] > 23}
-```
-<!-- .element: class="fragment" data-fragment-index="4" -->
-----
-<!-- .slide: data-transition="none" -->
-
-## Demo
+## Where do web servers like Node get their scalability?
 
 ----
 
-## Why Node.js is great for the realtime web
+## #1: The kernel
 
-- Node is event driven
-
-- Uses coroutines, not threads or processes <!-- .element: class="fragment" -->
-
-- Designed for thousands of simultaneous connections <!-- .element: class="fragment" -->
+- `epoll` on linux, `kqueue` on BSD/Mac
+- These interfaces let you keep thousands of sockets open and poll them in in O(1) time, instead of O(n)
 
 ----
 
-## Event driven
+## #2: Coroutines instead of threads
 
-Node.js was originally created with push capabilities in mind  <!-- .element: class="fragment" -->
-
-When an event occurs, callbacks are run in response.  <!-- .element: class="fragment" -->
-
-But if nothing is happening, Node is happy to quietly wait.  <!-- .element: class="fragment" -->
+This one takes a bit more explaining.  <!-- .element: class="fragment" -->
 
 ----
 
-## Node uses coroutines
+## The old model for web servers
 
-Coroutines are "cooperative multitasking". <!-- .element: class="fragment" -->
-
-Unlike threads, coroutines don't need locks or mutexes to protect memory <!-- .element: class="fragment" -->
-
-Unlike threads, you don't pay the cost of context switching back to the operating system between tasks. <!-- .element: class="fragment" -->
-
-They're great if you do a lot of I/O and don't need a lot of CPU time  <!-- .element: class="fragment" -->
+Open a thread or process for each incoming request
 
 ----
 
-## Node is designed for thousands of connections
+### What threads and processes are good for.
 
-How do you have 10,000 connections to your web server open at once?
+Threads simplify your code if you're doing a lot of CPU heavy tasks.
 
-You can't use threads, it takes up too much memory! <!-- .element: class="fragment" -->
-
-Co-routines solve this. <!-- .element: class="fragment" -->
-
-Web servers do a ton of I/O, so they're a perfect match. <!-- .element: class="fragment" -->
+You don't need to worry about being fair to other jobs, the OS does it for you.<!-- .element: class="fragment" -->
 
 ----
 
-### So, what makes RethinkDB useful for realtime?
+### The cost of processes and threads
+
+Each process gets a complete copy of the memory space
+
+Threads use much less memory, but...
 
 ----
 
-## To answer that question, let's build a realtime app
+### Switching between threads is slow
 
-The natural choice for the frontend is to talk to the browser over Websockets <!-- .element: class="fragment" data-fragment-index="2" -->
+The OS has to do task switching:
 
-<img class="fragment movie_img" data-fragment-index="2" src="movies/01_last_frame.png">
-
-----
-<!-- .slide: data-transition="fade" -->
-
-## This works great
-
-As Node becomes aware of relevant events, it pushes them to the clients that need them <!-- .element: class="fragment" -->
-
-Without threads, we can have thousands of connections simultaneously <!-- .element: class="fragment" -->
-
-Since everything is push, no unnecessary work is going on <!-- .element: class="fragment" -->
-
-<img class="movie_img" src="movies/01_last_frame.png">
+  1. You need to jump to kernel space (small cost) <!-- .element: class="fragment" -->
+  2. The kernel needs to decide which thread/process to run next (big cost) <!-- .element: class="fragment" -->
+  3. The kernel needs to jump back to your process (small cost) <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+### In a web app
 
-## Well, almost no unnecessary work
+Most time is spent waiting for I/O, not doing cpu heavy computations
 
-How does Node find out about relevant events?
+Ever wonder how "slow" languages like Ruby and Python got so big on the web? <!-- .element: class="fragment" -->
 
-<video data-autoplay src="movies/02_what_pushes.webm"></video>
-
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## Option 1: Polling the database
-
-1. Query the database every 500ms
-2. Calculate the diff
-3. Push the results to the client
-4. Optionally, push everything and have the client do the diff
-
-<img class="movie_img" src="movies/02_last_frame.png">
-
-----
-<!-- .slide: data-transition="fade" -->
-
-## Polling isn't great :/
-
-It's slow, and it puts a massive load on the database and the web server as more clients connect.
-
-We don't want the webserver doing a bunch of busywork <!-- .element: class="fragment" data-fragment-index="2" -->
-
-Busywork means we can't handle as many requests <!-- .element: class="fragment" data-fragment-index="3" -->
-
-<img class="movie_img" src="movies/02_last_frame.png">
+This is how they get away with it <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+### Threads and processes don't buy us much in web apps
 
-## Option 2: Message queues
+We don't spend much time in the app itself using cpu <!-- .element: class="fragment" -->
 
-- A message queue will wake Node up only when there's an event to be
-processed.
-
-- This is a push architecture, and it ensures Node isn't doing busywork. <!-- .element: class="fragment" -->
-
-<video data-autoplay src="movies/03_mq.webm"></video>
+Instead we spend most of our time reading and writing on sockets <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+## Coroutines avoid paying context switch costs
 
-## How do we know what to send to Node?
+No jumping to the kernel and back, we switch ourselves.
 
-We could try just sending everything.
+Our cpu usage is light, so it isn't long before we will let another coroutine run. <!-- .element: class="fragment" -->
 
-The app can sort out what's relevant. <!-- .element: class="fragment" -->
-
-This is the "firehose strategy" <!-- .element: class="fragment" -->
-
-<video data-autoplay src="movies/04_firehose.webm"></video>
+<span>This is called **cooperative multitasking**</span> <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+## Side benefit of cooperative multitasking
 
-## And when we scale out?
+No locks/mutexes
 
-Well, we have to send all events to all webservers
+You just don't yield control until you're ready. <!-- .element: class="fragment" -->
 
-<video data-autoplay src="movies/05_scaled_firehose.webm"></video>
-
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## This is almost as bad as polling
-
-Instead of asking for events when nothing is happening, we're
-processing tons of events that aren't relevant.
-
-<img class="movie_img" src="movies/05_last_frame.png">
+Nobody will pre-empt you. <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+## epoll/kqueue + coroutines
 
-## Time to get smart?
+One process listens on the epoll/kqueue socket
 
-- We can set up different queues for different kinds of events... <!-- .element: class="fragment" -->
-- We can subscribe to topics... <!-- .element: class="fragment" -->
-- We can divide all our queries up into categories... <!-- .element: class="fragment" -->
+<span>Called an **io loop** or **reactor**</span> <!-- .element: class="fragment" -->
 
-<video data-autoplay src="movies/06_smart_mq.webm"></video>
+It reads data from the socket, then passes it to the right coroutine <!-- .element: class="fragment" -->
 
-----
-
-<!-- .slide: data-transition="fade" -->
-
-## This is complicated
-
-You can get this to be efficient, but it's a lot of work
-
-The solution will be different for every app <!-- .element: class="fragment" -->
-
-As your app evolves, you'll need to add new queues to keep up <!-- .element: class="fragment" -->
-
-<img class="movie_img" src="movies/06_last_frame.png">
+When the coroutine completes, go back to waiting on the socket <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+## The critical part:
 
-## But before we do all that
+No busy looping. No polling.
 
-Let's zoom out a bit more.
+There's a flurry of activity when data comes in, but otherwise we're sitting around waiting. <!-- .element: class="fragment" -->
 
-Are we stuck sending our updates to two places? <!-- .element: class="fragment" -->
-
-Once to the database as the source of truth, and once to our push notification architecture? <!-- .element: class="fragment" -->
-
-<video data-autoplay src="movies/07_change_sources.webm"></video>
+This is "Push, don't Poll" <!-- .element: class="fragment" -->
 
 ----
 
-<!-- .slide: data-transition="fade" -->
+## So coroutines work great for web apps but...
 
-## Can the database just do it?
+Are they good for databases?
 
-Let's just have the database tell us when something happens.
-
-That's what changefeeds are <!-- .element: class="fragment" -->
-
-<video data-autoplay src="movies/08_changefeeds.webm"></video>
-
-----
-
-## Using changefeeds demo
-
-----
-
-## Why the database is best positioned to handle this
-
-- The database knows how your queries work  <!-- .element: class="fragment" -->
-- It knows what parts of the query depend on what data  <!-- .element: class="fragment" -->
-- It knows which shards the data is on <!-- .element: class="fragment" -->
-- And it can save a bunch of processing time because of it <!-- .element: class="fragment" -->
-
-----
-
-## The tech behind changefeeds
-
-----
-
-## Aren't DB connections expensive?
-
-Normally, they are. <!-- .element: class="fragment" -->
-
-Most databases use a process or a thread per connection. <!-- .element: class="fragment" -->
-
-But RethinkDB uses coroutines for everything, so connections are cheap. <!-- .element: class="fragment" -->
+It depends <!-- .element: class="fragment" -->
 
 ----
 
 ## Coroutines in the database
 
-Often aren't worth the trouble. <!-- .element: class="fragment" -->
+Often aren't worth the trouble.
 
 Queries are commonly CPU bound, which is where cooperative multitasking isn't much benefit. <!-- .element: class="fragment" -->
 
-But it is very useful in the case where we have many "mostly idle" connections listening for changes. <!-- .element: class="fragment" -->
+Most databases use a process or thread per connection. <!-- .element: class="fragment" -->
+
+----
+
+## Why RethinkDB is different
+
+Coroutines are very useful in the case where there are many mostly idle connections listening for changes. <!-- .element: class="fragment" -->
+
+This is how changefeeds work  <!-- .element: class="fragment" -->
+
+We can keep thousands of database connections open and push changes to them <!-- .element: class="fragment" -->
+
+----
+
+## Coroutines let us do things other databases can't.
+
+This isn't something you can bolt on afterwards. <!-- .element: class="fragment" -->
+
+Cooperative multitasking has to be integrated into every part of the database. <!-- .element: class="fragment" -->
+
+----
+
+## The bottom line
+
+Connections are cheap in RethinkDB.
+
+Make as many as you need.
+
+----
+
+## Switching gears
+
+Why is the database in the best place to push changes to your app?
+
+----
+
+## You're already storing incoming events there
+
+When a user makes a change, the database is where you store it
+
+The database can push changes to other users notifying them of the change
+
+----
+
+## The database knows how your queries work
+
+It's already parsed the queries and turned them into its native data structures in memory
+
+----
+
+## It knows what parts of the query depend on what data
+
+Some parts of a query are constant and won't change depending on changes in the data.  <!-- .element: class="fragment" -->
+
+Some parts of a query can only change in specific ways we can optimize for. <!-- .element: class="fragment" -->
+
+----
+
+## It knows where the data you're watching is located
+
+We only listen to shards that actually hold your data.  <!-- .element: class="fragment" -->
 
 ----
 
@@ -371,13 +255,6 @@ But it is very useful in the case where we have many "mostly idle" connections l
 Changefeeds enable a front-to-back push architecture.  <!-- .element: class="fragment" -->
 
 Write your queries once, get the snapshot of the data you want, and then get updates as they happen in real time.  <!-- .element: class="fragment" -->
-
-----
-
-## The future
-
-- Right now, changefeeds work on the "map" step, but not the "reduce" step
-- Our goal is to make all queries changefeedable <!-- .element: class="fragment" -->
 
 ----
 
@@ -393,8 +270,6 @@ Write your queries once, get the snapshot of the data you want, and then get upd
   - It's available on most platforms
   - very easy to get started
 - Ask us questions and give us feedback [@rethinkdb](http://twitter.com/rethinkdb) on twitter
-### The 2.0 RC just dropped, now is an exciting time to get involved.
-- We have a [meetup on March 30th](http://www.meetup.com/RethinkDB-SF-Meetup-Group/events/220927293/) for the 2.0 release.
 
 ----
 
